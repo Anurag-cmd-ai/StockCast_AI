@@ -7,6 +7,7 @@ import torch.nn as nn
 from sklearn.preprocessing import MinMaxScaler
 from torch.utils.data import Dataset, DataLoader
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import requests
 import warnings
 
@@ -19,308 +20,122 @@ st.set_page_config(page_title="StockCast AI", page_icon="📈", layout="wide")
 
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
-
-    /* ── Global dark background ── */
-    html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] {
-        background-color: #060d1f !important;
-        color: #f8fafc !important;
-        font-family: 'DM Sans', sans-serif !important;
-    }
-    [data-testid="stSidebar"], [data-testid="stHeader"] {
-        background-color: #060d1f !important;
-    }
-    section[data-testid="stMain"] > div {
-        background-color: #060d1f !important;
-    }
-
-    /* ── Hero ── */
-    .hero {
-        background: linear-gradient(135deg, #0a1628 0%, #0f2044 50%, #0a1628 100%);
-        border: 1px solid rgba(251,191,36,0.30);
-        border-radius: 20px;
-        padding: 2.4rem 3rem;
-        margin-bottom: 1.8rem;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 0 60px rgba(251,191,36,0.06), inset 0 1px 0 rgba(255,255,255,0.05);
-    }
-    .hero::before {
-        content: "";
-        position: absolute;
-        top: -60px; left: -60px;
-        width: 220px; height: 220px;
-        background: radial-gradient(circle, rgba(251,191,36,0.08) 0%, transparent 70%);
-        pointer-events: none;
-    }
-    .hero h1 {
-        color: #ffffff;
-        font-size: 2.4rem;
-        font-weight: 700;
-        margin-bottom: 0.4rem;
-        letter-spacing: -0.02em;
-        text-shadow: 0 0 30px rgba(251,191,36,0.3);
-    }
-    .hero p {
-        color: #94a3b8;
-        font-size: 1rem;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        margin: 0;
-    }
-
-    /* ── Inputs ── */
-    [data-testid="stTextInput"] input,
-    [data-testid="stNumberInput"] input,
-    [data-testid="stSelectbox"] > div > div {
-        background: #0d1b35 !important;
-        border: 1px solid rgba(255,255,255,0.10) !important;
-        color: #ffffff !important;
-        border-radius: 10px !important;
-    }
-    [data-testid="stTextInput"] input:focus,
-    [data-testid="stNumberInput"] input:focus {
-        border-color: rgba(251,191,36,0.50) !important;
-        box-shadow: 0 0 0 3px rgba(251,191,36,0.10) !important;
-    }
-    label, .stSelectbox label, [data-testid="stWidgetLabel"], [data-testid="stRadio"] label, [data-testid="stCheckbox"] label {
-        color: #cbd5e1 !important;
-        font-weight: 600 !important;
-        font-size: 0.85rem !important;
-        letter-spacing: 0.04em !important;
-        text-transform: uppercase !important;
-    }
-
-    /* ── Predict button ── */
-    [data-testid="stButton"] > button {
-        background: linear-gradient(135deg, #f59e0b, #fbbf24) !important;
-        color: #0a0a0a !important;
-        font-weight: 700 !important;
-        font-size: 1.05rem !important;
-        border: none !important;
-        border-radius: 12px !important;
-        padding: 0.75rem 2rem !important;
-        letter-spacing: 0.04em !important;
-        box-shadow: 0 4px 20px rgba(251,191,36,0.35) !important;
-        transition: all 0.2s ease !important;
-    }
-    [data-testid="stButton"] > button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 28px rgba(251,191,36,0.50) !important;
-    }
-
-    /* ── Metric cards — bright white professional ── */
-    div[data-testid="metric-container"] {
-        background: linear-gradient(145deg, #0d1b35, #0f2248) !important;
-        border: 1px solid rgba(255,255,255,0.10) !important;
-        border-radius: 16px !important;
-        padding: 1.2rem 1.4rem !important;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.06) !important;
-        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-    }
-    div[data-testid="metric-container"]:hover {
-        transform: translateY(-3px) !important;
-        box-shadow: 0 8px 32px rgba(251,191,36,0.15), inset 0 1px 0 rgba(255,255,255,0.08) !important;
-        border-color: rgba(251,191,36,0.30) !important;
-    }
-
-    /* Metric LABEL */
-    div[data-testid="metric-container"] label,
-    div[data-testid="metric-container"] [data-testid="stMetricLabel"],
-    div[data-testid="metric-container"] [data-testid="stMetricLabel"] *,
-    div[data-testid="metric-container"] [data-testid="stMetricLabel"] p {
-        color: #94a3b8 !important;
-        font-size: 0.78rem !important;
-        font-weight: 600 !important;
-        letter-spacing: 0.07em !important;
-        text-transform: uppercase !important;
-    }
-
-    /* Metric VALUE — force pure bright white */
-    [data-testid="stMetricValue"],
-    [data-testid="stMetricValue"] *,
-    [data-testid="stMetricValue"] > div,
-    [data-testid="stMetricValue"] div,
-    [data-testid="stMetricValue"] label,
-    [data-testid="stMetricValue"] span,
-    [data-testid="stMetricValue"] p {
-        color: #ffffff !important;
-        -webkit-text-fill-color: #ffffff !important;
-        opacity: 1 !important;
-        font-size: 1.95rem !important;
-        font-weight: 800 !important;
-        font-family: 'Space Mono', monospace !important;
-        letter-spacing: -0.01em !important;
-        text-shadow: none !important;
-        filter: none !important;
-    }
-
-    /* Metric DELTA */
-    div[data-testid="metric-container"] [data-testid="stMetricDelta"] svg {
-        display: none !important;
-    }
-    div[data-testid="metric-container"] [data-testid="stMetricDelta"],
-    div[data-testid="metric-container"] [data-testid="stMetricDelta"] > div,
-    div[data-testid="metric-container"] [data-testid="stMetricDelta"] * {
-        font-size: 0.85rem !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.02em !important;
-        color: #6ee7b7 !important;
-        -webkit-text-fill-color: #6ee7b7 !important;
-        opacity: 1 !important;
-        text-shadow: 0 0 8px rgba(110,231,183,0.70), 0 0 18px rgba(52,211,153,0.45) !important;
-        filter: brightness(1.2) !important;
-    }
-
-    /* ── Ticker heading ── */
-    .ticker-head {
-        font-size: 1.7rem;
-        font-weight: 700;
-        color: #ffffff;
-        letter-spacing: -0.02em;
-        display: flex;
-        align-items: center;
-        gap: 0.6rem;
-        flex-wrap: wrap;
-    }
-    .ticker-badge {
-        background: rgba(251,191,36,0.15);
-        color: #fbbf24;
-        border: 1px solid rgba(251,191,36,0.40);
-        border-radius: 8px;
-        padding: 3px 12px;
-        font-size: 0.9rem;
-        font-weight: 700;
-        font-family: 'Space Mono', monospace;
-        letter-spacing: 0.05em;
-    }
-
-    /* ── Section heading ── */
-    .section-head {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #e2e8f0;
-        margin: 1.5rem 0 0.5rem 0;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        border-left: 3px solid #fbbf24;
-        padding-left: 0.75rem;
-    }
-
-    /* ── Alert / success / error boxes ── */
-    [data-testid="stAlert"] {
-        border-radius: 12px !important;
-        font-weight: 600 !important;
-        font-size: 1rem !important;
-    }
-
-    /* ── Dataframe ── */
-    [data-testid="stDataFrame"] {
-        border-radius: 12px !important;
-        overflow: hidden !important;
-        border: 1px solid rgba(255,255,255,0.08) !important;
-    }
-
-    /* ── Download button ── */
-    [data-testid="stDownloadButton"] > button {
-        background: #0d1b35 !important;
-        color: #fbbf24 !important;
-        border: 1px solid rgba(251,191,36,0.35) !important;
-        border-radius: 10px !important;
-        font-weight: 600 !important;
-        margin-top: 0.5rem !important;
-    }
-    [data-testid="stDownloadButton"] > button:hover {
-        background: rgba(251,191,36,0.10) !important;
-        border-color: rgba(251,191,36,0.60) !important;
-    }
-
-    /* ── Spinner text ── */
-    [data-testid="stSpinner"] p { color: #94a3b8 !important; }
-
-    /* ── Hide streamlit default header branding ── */
-    #MainMenu, footer { visibility: hidden; }
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+:root { --ink:#17211d; --muted:#748078; --green:#00a86b; --green-dark:#078655; --line:#e7ede9; --canvas:#f5f8f6; --card:#ffffff; }
+html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"] { background:var(--canvas)!important; color:var(--ink)!important; font-family:'DM Sans',sans-serif!important; }
+[data-testid="stHeader"] { background:rgba(245,248,246,.88)!important; }
+[data-testid="stSidebar"] { background:#fff!important; border-right:1px solid var(--line); }
+section[data-testid="stMain"] > div { padding-top:1.3rem; }
+.block-container { max-width:1440px; padding-left:2.4rem; padding-right:2.4rem; padding-bottom:3rem; }
+.brand-row { display:flex; align-items:center; gap:10px; margin:0 0 1.1rem; color:var(--ink); font-weight:800; font-family:Manrope,sans-serif; font-size:1.2rem; letter-spacing:-.04em; }
+.brand-mark { display:inline-grid; place-items:center; width:34px;height:34px;border-radius:11px;background:#dff7eb;color:#008c59;font-size:18px; }
+.hero { background:linear-gradient(112deg,#e8f8ef 0%,#f3fbf6 58%,#eef8f2 100%); border:1px solid #d9efe2; border-radius:22px; padding:1.65rem 2rem; margin:0 0 1.15rem; position:relative; overflow:hidden; }
+.hero:after { content:'';position:absolute;width:220px;height:220px;right:5%;top:-120px;border-radius:50%;background:rgba(0,168,107,.11); }
+.hero h1 { color:var(--ink); font:800 1.8rem/1.2 Manrope,sans-serif; letter-spacing:-.055em; margin:0 0 .35rem; }
+.hero p { margin:0;color:#66766d;font-size:.94rem; }
+.eyebrow { color:#008c59;text-transform:uppercase;font-weight:700;letter-spacing:.12em;font-size:.7rem;margin-bottom:.55rem; }
+[data-testid="stWidgetLabel"] p, label { color:#536158!important;font-size:.78rem!important;font-weight:700!important;letter-spacing:.025em; }
+[data-testid="stTextInput"] input,[data-testid="stNumberInput"] input,[data-testid="stSelectbox"] [data-baseweb="select"] > div { background:#fff!important;color:var(--ink)!important;border:1px solid #dce5df!important;border-radius:10px!important; }
+[data-testid="stTextInput"] input:focus,[data-testid="stNumberInput"] input:focus { border-color:#00a86b!important;box-shadow:0 0 0 3px rgba(0,168,107,.12)!important; }
+[data-testid="stButton"] > button { border-radius:11px!important;font-weight:700!important;border:1px solid #dce5df!important;background:#fff!important;color:#34433a!important;transition:all .18s ease!important; }
+[data-testid="stButton"] > button:hover { border-color:#00a86b!important;color:#008c59!important;transform:translateY(-1px); }
+[data-testid="stButton"] > button[kind="primary"] { background:#00a86b!important;border-color:#00a86b!important;color:white!important;box-shadow:0 5px 15px rgba(0,168,107,.2)!important; }
+[data-testid="metric-container"] { background:#fff!important;border:1px solid var(--line)!important;border-radius:16px!important;padding:1rem 1.1rem!important;box-shadow:0 4px 16px rgba(26,53,39,.035)!important; }
+[data-testid="stMetricLabel"], [data-testid="stMetricLabel"] * { color:#738078!important;font-size:.76rem!important;font-weight:700!important;letter-spacing:.045em;text-transform:uppercase; }
+[data-testid="stMetricValue"], [data-testid="stMetricValue"] * { color:var(--ink)!important;font-family:Manrope,sans-serif!important;font-size:1.55rem!important;font-weight:800!important;letter-spacing:-.04em; }
+[data-testid="stMetricDelta"] { font-size:.8rem!important;font-weight:700!important; }
+[data-testid="stRadio"] [role="radiogroup"] { gap:.35rem; }
+[data-testid="stRadio"] label { text-transform:none!important;letter-spacing:0!important;font-size:.76rem!important; }
+[data-testid="stCheckbox"] label { text-transform:none!important;letter-spacing:0!important;font-size:.74rem!important; }
+.ticker-head { font:800 1.45rem Manrope,sans-serif;color:var(--ink);letter-spacing:-.04em;display:flex;align-items:center;gap:.65rem;flex-wrap:wrap;margin:.2rem 0 .8rem; }
+.ticker-badge { background:#e6f7ee;color:#008c59;border:1px solid #c9ebd8;border-radius:999px;padding:4px 11px;font:700 .75rem 'DM Sans',sans-serif;letter-spacing:.025em; }
+.section-head { color:#35443b;font:800 .98rem Manrope,sans-serif;letter-spacing:-.02em;margin:1rem 0 .5rem; }
+.helper-copy { color:#748078;font-size:.86rem; }
+[data-testid="stAlert"] { border-radius:13px!important;border:1px solid var(--line)!important; }
+[data-testid="stDataFrame"] { border-radius:14px!important;border:1px solid var(--line)!important;overflow:hidden; }
+[data-testid="stDownloadButton"] > button { background:#fff!important;border:1px solid #cfe8da!important;color:#078655!important;border-radius:10px!important;font-weight:700!important; }
+[data-testid="stDownloadButton"] > button:hover { background:#f0faf4!important;border-color:#00a86b!important; }
+[data-testid="stVerticalBlockBorderWrapper"] { background:#fff;border:1px solid var(--line)!important;border-radius:18px!important;box-shadow:0 5px 20px rgba(26,53,39,.035); }
+[data-testid="stTabs"] [data-baseweb="tab-list"] { gap:1.4rem;border-bottom:1px solid var(--line); }
+[data-testid="stTabs"] [data-baseweb="tab"] { color:#718078;font-weight:700; }
+[data-testid="stTabs"] [aria-selected="true"] { color:#008c59!important; }
+[data-testid="stSpinner"] p { color:#66766d!important; }
+#MainMenu, footer { visibility:hidden; }
+@media (max-width: 760px) { .block-container{padding-left:1rem;padding-right:1rem}.hero{padding:1.3rem}.hero h1{font-size:1.45rem} }
 </style>
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────
-# HERO HEADER
+# BRAND & SEARCH
 # ─────────────────────────────────────────────
+st.markdown('<div class="brand-row"><span class="brand-mark">↗</span> StockCast <span style="font-weight:500;color:#7b8981;font-size:.78rem;letter-spacing:0">MARKET STUDIO</span></div>', unsafe_allow_html=True)
 st.markdown("""
 <div class="hero">
-    <h1>·&nbsp Stock Price Predictor</h1>
-    <p>· Live market data &nbsp;·&nbsp; 30-day outlook</p>
+  <div class="eyebrow">Your market, at a glance</div>
+  <h1>Invest with a clearer view.</h1>
+  <p>Explore market history, compare a model-generated scenario, and plan a recurring investment.</p>
 </div>
 """, unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────
-# INPUT SECTION
-# ─────────────────────────────────────────────
-with st.container():
-    c1, c2 = st.columns(2)
-
+with st.container(border=True):
+    st.markdown('<div class="eyebrow">Explore an asset</div>', unsafe_allow_html=True)
+    c1, c2, c3 = st.columns([1.3, 1.5, 1])
     with c1:
-        market = st.selectbox("🌍 Market / Asset Type", [
-            "Auto-detect / Global",
-            "US Market",
-            "Indian Market (NSE)",
-            "Indian Market (BSE)",
-            "UK Market (LSE)",
-            "Cryptocurrency"
-        ])
-        timeline_unit = st.selectbox("📅 Timeline Unit", ["Days", "Weeks", "Months", "Years"])
-
+        market = st.selectbox("Market", ["Auto-detect / Global", "US Market", "Indian Market (NSE)", "Indian Market (BSE)", "UK Market (LSE)", "Cryptocurrency"])
     with c2:
-        user_input = st.text_input(
-            "🔎 Search Company Name or Symbol",
-            placeholder="e.g., Amazon, Apple, AAPL, Bitcoin, TCS"
-        )
-        timeline_map = {
-            "Days":   [7, 14, 30, 60, 90],
-            "Weeks":  [1, 2, 4, 8, 12, 26, 52],
-            "Months": [1, 3, 6, 12, 24],
-            "Years":  [1, 2, 3, 5],
-        }
-        timeline_val = st.selectbox(f"Count ({timeline_unit})", timeline_map[timeline_unit])
-
-st.markdown("<br>", unsafe_allow_html=True)
-predict_btn = st.button("🚀 Fetch Data & Predict", use_container_width=True)
+        user_input = st.text_input("Company or symbol", placeholder="Search Apple, AAPL, TCS, Bitcoin…")
+    with c3:
+        timeline_unit = st.selectbox("History window", ["Days", "Weeks", "Months", "Years"], index=2)
+        timeline_map = {"Days": [7, 14, 30, 60, 90], "Weeks": [1, 2, 4, 8, 12, 26, 52], "Months": [1, 3, 6, 12, 24], "Years": [1, 2, 3, 5]}
+        timeline_val = st.selectbox(f"Window ({timeline_unit.lower()})", timeline_map[timeline_unit], index=2 if timeline_unit == "Months" else 0)
+predict_btn = st.button("View market dashboard  →", type="primary", use_container_width=True)
+st.caption("Market data provided by Yahoo Finance. Forecasts are illustrative model outputs, not investment advice.")
 
 # ─────────────────────────────────────────────
 # SHARED PLOTLY LAYOUT
 # ─────────────────────────────────────────────
 CHART_LAYOUT = dict(
-    height=460,
+    height=430,
     margin=dict(l=8, r=8, t=28, b=8),
     paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(6,13,31,0.98)",
-    font=dict(family="DM Sans, sans-serif", color="#f8fafc", size=13),
+    plot_bgcolor="rgba(255,255,255,0)",
+    font=dict(family="DM Sans, sans-serif", color="#34433a", size=12),
     xaxis=dict(
-        showgrid=True, gridcolor="rgba(255,255,255,0.07)",
+        showgrid=True, gridcolor="rgba(39,71,52,0.08)",
         gridwidth=1, zeroline=False,
-        showline=True, linewidth=1, linecolor="rgba(255,255,255,0.18)", mirror=True,
-        tickfont=dict(color="#cbd5e1", size=11),
+        showline=True, linewidth=1, linecolor="rgba(39,71,52,0.16)", mirror=True,
+        tickfont=dict(color="#718078", size=11),
         rangeslider=dict(visible=False),
+        rangeselector=dict(
+            bgcolor="rgba(255,255,255,0.95)",
+            activecolor="#dff7eb",
+            font=dict(color="#536158", size=10),
+            buttons=[
+                dict(count=1, label="1M", step="month", stepmode="backward"),
+                dict(count=3, label="3M", step="month", stepmode="backward"),
+                dict(count=6, label="6M", step="month", stepmode="backward"),
+                dict(count=1, label="1Y", step="year", stepmode="backward"),
+                dict(step="all", label="ALL"),
+            ],
+        ),
     ),
     yaxis=dict(
-        showgrid=True, gridcolor="rgba(255,255,255,0.07)",
+        showgrid=True, gridcolor="rgba(39,71,52,0.08)",
         gridwidth=1, zeroline=False,
-        showline=True, linewidth=1, linecolor="rgba(255,255,255,0.18)", mirror=True,
-        tickfont=dict(color="#cbd5e1", size=11),
+        showline=True, linewidth=1, linecolor="rgba(39,71,52,0.16)", mirror=True,
+        tickfont=dict(color="#718078", size=11),
     ),
     legend=dict(
-        bgcolor="rgba(6,13,31,0.92)",
-        bordercolor="rgba(251,191,36,0.30)",
+        bgcolor="rgba(255,255,255,0.95)",
+        bordercolor="#e3ebe5",
         borderwidth=1,
-        font=dict(color="#f8fafc", size=12),
+        font=dict(color="#34433a", size=12),
         orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
     ),
     hovermode="x unified",
     hoverlabel=dict(
-        bgcolor="#0d1b35",
-        bordercolor="#fbbf24",
-        font=dict(family="DM Sans, sans-serif", color="#ffffff", size=14),
+        bgcolor="#ffffff",
+        bordercolor="#00a86b",
+        font=dict(family="DM Sans, sans-serif", color="#17211d", size=14),
     ),
 )
 
@@ -577,63 +392,112 @@ if st.session_state.get('active_pred'):
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Historical Chart & Candlestick Toggle ─────────
-    hist_col1, hist_col2 = st.columns([3, 1])
-    with hist_col1:
-        st.markdown("<div class='section-head'> Historical Price Movement</div>", unsafe_allow_html=True)
-    with hist_col2:
-        st.write("")
-        show_candles = st.checkbox(" Show Pro Candlesticks", value=False)
+    # ── Historical Chart Controls ───────────────────
+    st.markdown("<div class='section-head'>Historical price movement</div>", unsafe_allow_html=True)
+    controls_a, controls_b, controls_c = st.columns([1.6, 1.0, 0.72])
+    with controls_a:
+        chart_style = st.radio("Chart style", ["Line", "Candlestick"], horizontal=True, index=0, key="history_chart_style")
+    with controls_b:
+        show_averages = st.checkbox("SMA 20 / 50", value=True, key="history_show_sma")
+    with controls_c:
+        show_volume = st.checkbox("Volume", value=False, key="history_show_volume")
 
-    fig1 = go.Figure()
+    has_ohlc = all(col in df.columns for col in ["Open", "High", "Low", "Close"])
+    use_candles = chart_style == "Candlestick" and has_ohlc
+    add_volume = show_volume and "Volume" in df.columns
+    chart_rows = 2 if add_volume else 1
+    row_heights = [0.76, 0.24] if add_volume else [1.0]
+    fig1 = make_subplots(
+        rows=chart_rows, cols=1, shared_xaxes=add_volume,
+        vertical_spacing=0.04, row_heights=row_heights,
+    )
 
-    if show_candles and all(col in df.columns for col in ["Open", "High", "Low"]):
-        # Render the Pro Candlestick view
-        fig1.add_trace(go.Candlestick(
+    if use_candles:
+        candle_trace = go.Candlestick(
             x=dates,
-            open=df["Open"],
-            high=df["High"],
-            low=df["Low"],
-            close=df["Close"],
-            name="Candlestick",
-            increasing_line_color='#22c55e', decreasing_line_color='#ef4444'
-        ))
-        layout1 = {**CHART_LAYOUT}
-        layout1["xaxis"]["rangeslider"] = dict(visible=False) # Plotly shows rangeslider by default for candles, turn it off to match layout
-        layout1["yaxis"] = {**layout1["yaxis"], "title": dict(text=f"Price ({currency})", font=dict(color="#64748b", size=11))}
-        fig1.update_layout(**layout1)
+            open=df["Open"].iloc[:len(dates)],
+            high=df["High"].iloc[:len(dates)],
+            low=df["Low"].iloc[:len(dates)],
+            close=df["Close"].iloc[:len(dates)],
+            name="OHLC",
+            increasing_line_color="#00a86b",
+            decreasing_line_color="#e05252",
+            increasing_fillcolor="rgba(0,168,107,0.78)",
+            decreasing_fillcolor="rgba(224,82,82,0.78)",
+            whiskerwidth=0.45,
+        )
+        fig1.add_trace(candle_trace, row=1, col=1)
     else:
-        # Render the standard line view
-        fig1.add_trace(go.Scatter(
-            x=dates, y=close,
+        line_trace = go.Scatter(
+            x=dates,
+            y=close,
             mode="lines",
-            name="Close Price",
-            line=dict(color="#3b82f6", width=2.5),
+            name="Close price",
+            line=dict(color="#00a86b", width=2.8),
             fill="tozeroy",
-            fillcolor="rgba(59,130,246,0.08)",
+            fillcolor="rgba(0,168,107,0.10)",
             hovertemplate="<b>%{x|%d %b %Y}</b><br>Price: " + currency + " %{y:,.2f}<extra></extra>",
-        ))
-        layout1 = {**CHART_LAYOUT}
-        layout1["yaxis"] = {**layout1["yaxis"], "title": dict(text=f"Price ({currency})", font=dict(color="#64748b", size=11))}
-        fig1.update_layout(**layout1)
+        )
+        fig1.add_trace(line_trace, row=1, col=1)
 
-    st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": False, "responsive": True})
+    if show_averages:
+        close_series = pd.Series(close, index=dates)
+        for window, color in [(20, "#4682c5"), (50, "#c18a2c")]:
+            if len(close_series) >= window:
+                sma = close_series.rolling(window, min_periods=window).mean()
+                sma_trace = go.Scatter(
+                    x=dates,
+                    y=sma,
+                    mode="lines",
+                    name=f"SMA {window}",
+                    line=dict(color=color, width=1.5, dash="dot"),
+                    hovertemplate=f"<b>%{{x|%d %b %Y}}</b><br>SMA {window}: {currency} %{{y:,.2f}}<extra></extra>",
+                )
+                fig1.add_trace(sma_trace, row=1, col=1)
+
+    if add_volume:
+        volume = pd.to_numeric(df["Volume"].iloc[:len(dates)], errors="coerce").fillna(0)
+        if use_candles:
+            up_day = df["Close"].iloc[:len(dates)].to_numpy() >= df["Open"].iloc[:len(dates)].to_numpy()
+        else:
+            up_day = pd.Series(close, index=dates).diff().fillna(0).to_numpy() >= 0
+        volume_colors = ["rgba(0,168,107,0.55)" if is_up else "rgba(224,82,82,0.50)" for is_up in up_day]
+        volume_trace = go.Bar(
+            x=dates,
+            y=volume,
+            marker_color=volume_colors,
+            name="Volume",
+            hovertemplate="<b>%{x|%d %b %Y}</b><br>Volume: %{y:,.0f}<extra></extra>",
+        )
+        fig1.add_trace(volume_trace, row=2, col=1)
+        fig1.update_yaxes(title_text="Volume", row=2, col=1, showgrid=False, tickfont=dict(color="#718078", size=9))
+
+    layout1 = {**CHART_LAYOUT}
+    layout1["height"] = 480 if add_volume else 430
+    layout1["xaxis"] = {**layout1["xaxis"], "rangeslider": {"visible": False}, "title": None}
+    layout1["yaxis"] = {**layout1["yaxis"], "title": dict(text=f"Price ({currency})", font=dict(color="#718078", size=11))}
+    layout1["xaxis2"] = {"showgrid": False, "tickfont": dict(color="#718078", size=10), "rangeslider": {"visible": False}}
+    layout1["showlegend"] = True
+    layout1["legend"] = {**layout1["legend"], "orientation": "h", "y": 1.12}
+    fig1.update_layout(**layout1)
+    fig1.update_xaxes(rangeslider_visible=False)
+    st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": True, "displaylogo": False, "responsive": True, "modeBarButtonsToRemove": ["lasso2d", "select2d"]})
 
     # ── Forecast Chart ─────────────────────────
-    st.markdown("<div class='section-head'> 30-Day Forecast Prediction</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-head'> 30-Day Model Scenario</div>", unsafe_allow_html=True)
 
     fig2      = go.Figure()
     hist_x    = dates[-60:]
     hist_y    = close[-60:]
     is_up     = future_prices[-1] > curr
-    color_pred = "#22c55e" if is_up else "#ef4444"
-    fill_rgba  = "rgba(34,197,94,0.08)"  if is_up else "rgba(239,68,68,0.08)"
-    glow_rgba  = "rgba(34,197,94,0.22)"  if is_up else "rgba(239,68,68,0.22)"
+    color_pred = "#00a86b" if is_up else "#e05252"
+    fill_rgba  = "rgba(0,168,107,0.10)" if is_up else "rgba(224,82,82,0.09)"
+    glow_rgba  = "rgba(0,168,107,0.20)" if is_up else "rgba(224,82,82,0.18)"
 
     fig2.add_trace(go.Scatter(
         x=hist_x, y=hist_y,
         mode="lines", name="Recent Market",
-        line=dict(color="#3b82f6", width=2.5),
+        line=dict(color="#00a86b", width=2.7),
         hovertemplate="<b>%{x|%d %b %Y}</b><br>Price: " + currency + " %{y:,.2f}<extra></extra>",
     ))
     fig2.add_trace(go.Scatter(
@@ -666,10 +530,10 @@ if st.session_state.get('active_pred'):
     layout2 = {**CHART_LAYOUT}
     layout2["yaxis"] = {**layout2["yaxis"], "title": dict(text=f"Price ({currency})", font=dict(color="#e2e8f0", size=13))}
     fig2.update_layout(**layout2)
-    st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False, "responsive": True})
+    st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": True, "displaylogo": False, "responsive": True, "modeBarButtonsToRemove": ["lasso2d", "select2d"]})
 
     # ── Forecast Table ─────────────────────────
-    st.markdown("<div class='section-head'> Predicted Prices — Next 30 Days</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-head'> Model Scenario — Next 30 Days</div>", unsafe_allow_html=True)
 
     pred_df = pd.DataFrame({
         "Date": future_dates.strftime("%Y-%m-%d"),
