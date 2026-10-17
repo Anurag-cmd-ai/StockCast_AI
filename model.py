@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# model.py  —  LSTM Model · Dataset · Training & Prediction Pipeline
+# src/model.py  —  LSTM Model · Dataset · Training & Prediction Pipeline
 #
-# Imported by app.py:
+# Used by app.py:
 #   from model import train_and_predict
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -96,7 +96,7 @@ def train_and_predict(
     np.ndarray of shape (future_days,) in original price scale
     """
 
-    SEQ_LEN = seq_len if seq_len is not None else min(30, len(prices) // 4)
+    SEQ_LEN = seq_len if seq_len is not None else min(30, max(5, len(prices) // 4))
 
     # ── Normalise ──
     scaler = MinMaxScaler()

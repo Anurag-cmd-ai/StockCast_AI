@@ -46,11 +46,20 @@ An interactive stock forecasting application built with Python, PyTorch, and Str
 
 ```text
 StockCast-AI/
-├── app.py              # Streamlit interface and dashboard
-├── model.py            # LSTM model and forecasting logic
-├── utils.py            # Supporting utility functions
-├── requirements.txt    # Project dependencies
-└── README.md           # Project documentation
+├── app.py                 # Streamlit dashboard entry point
+├── model.py               # LSTM model and forecasting pipeline
+├── utils.py               # Market data helpers and chart layout
+├── assets/                # Static application assets
+├── data/
+│   └── raw/               # Optional local data; prices are fetched live
+├── models/                # Saved model artifacts, if added later
+├── notebooks/             # Exploratory analysis notebooks
+├── reports/
+│   └── figures/           # Exported charts and figures
+├── tests/                 # Automated tests
+├── requirements.txt
+├── .gitignore
+└── README.md
 ```
 
 ## 6. Installation and Setup

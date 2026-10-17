@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments and local configuration
+.venv/
+venv/
+.env
+.streamlit/secrets.toml
+
+# Downloaded market data
+/data/raw/*
+!/data/raw/.gitkeep
