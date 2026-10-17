@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore")
 # ─────────────────────────────────────────────
 # PAGE CONFIG
 # ─────────────────────────────────────────────
-st.set_page_config(page_title="Stock Price Predictor", page_icon="📈", layout="wide")
+st.set_page_config(page_title="StockCast AI", page_icon="📈", layout="wide")
 
 st.markdown("""
 <style>
