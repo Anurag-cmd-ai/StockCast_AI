@@ -1,129 +1,81 @@
-# 📈 Stock Price Predictor
+# StockCast AI — LSTM-Based Stock Price Forecasting Dashboard
 
-A simple web app that predicts the future price trend of any stock using an LSTM deep learning model. Built with Streamlit and powered by Yahoo Finance live data.
+An interactive stock forecasting application built with Python, PyTorch, and Streamlit. It uses an LSTM neural network to generate 30-day stock price forecasts from historical data retrieved through Yahoo Finance.
 
----
+**Live Demo:** [Launch StockCast AI](https://stockpredictorproject-agknu2yunsswuspbbinttf.streamlit.app/)
 
-## 🚀 Features
+## 1. Project Objective
 
-- Enter any stock symbol and get instant predictions
-- Fetches live data automatically from Yahoo Finance
-- Predicts next 30 days of stock price movement
-- Shows whether price will go UP or DOWN
-- Displays Week High, Week Low, Month Total stats
-- Clean charts for historical and forecast prices
-- Predicted price table for all 30 days
+- Retrieve and preprocess historical stock market data.
+- Apply LSTM-based time-series forecasting.
+- Generate iterative 30-day price predictions.
+- Visualize historical prices, forecast trends, and market statistics through an interactive dashboard.
 
----
+## 2. Key Features
 
-## 🛠️ Tech Stack
+- Dynamic stock ticker selection.
+- Historical data selection (1, 2, 3, or 5 years).
+- LSTM-based 30-day forecasting.
+- Historical and forecast price charts.
+- Daily prediction table and UP/DOWN trend indication.
+- Weekly highs, lows, and available market statistics.
 
-| Tool | Purpose |
+## 3. Technology Stack
+
+| Technology | Purpose |
 |---|---|
-| Python | Programming language |
-| Streamlit | Web app interface |
-| PyTorch | LSTM deep learning model |
-| Yahoo Finance (yfinance) | Live stock data |
-| Scikit-learn | Data scaling |
-| Matplotlib | Charts and graphs |
-| Pandas & Numpy | Data processing |
+| Python | Core programming |
+| Streamlit | Interactive dashboard |
+| PyTorch | LSTM model development |
+| yfinance | Historical stock data retrieval |
+| Pandas & NumPy | Data processing |
+| Scikit-learn | MinMaxScaler normalization |
+| Matplotlib | Visualization, if used in the implementation |
 
----
+## 4. Methodology and Workflow
 
-## 📁 Project Files
+1. **Data Acquisition:** Fetch historical stock prices using Yahoo Finance.
+2. **Data Preprocessing:** Normalize price data using MinMaxScaler.
+3. **Sequence Generation:** Create sequences using a 30-day lookback window.
+4. **LSTM Model Training:** Train the neural network to learn temporal patterns.
+5. **Iterative Forecasting:** Predict the next price and feed predictions back into the sequence to generate a 30-day forecast.
+6. **Inverse Transformation:** Convert normalized predictions back to the original price scale.
+7. **Visualization:** Display historical prices, forecast trends, and market statistics in Streamlit.
 
+## 5. Project Structure
+
+```text
+StockCast-AI/
+├── app.py              # Streamlit interface and dashboard
+├── model.py            # LSTM model and forecasting logic
+├── utils.py            # Supporting utility functions
+├── requirements.txt    # Project dependencies
+└── README.md           # Project documentation
 ```
-files1/
-├── app.py            → Main application (everything is here)
-└── requirements.txt  → Python libraries to install
-```
 
----
+## 6. Installation and Setup
 
-## ⚙️ Installation
-
-**Step 1 — Install Python**
-Download from python.org (version 3.8 or above)
-
-**Step 2 — Install required libraries**
-Open Command Prompt, navigate to the project folder and run:
-```
+```bash
+git clone <your-repository-url>
+cd StockCast-AI
 pip install -r requirements.txt
-```
-
-**Step 3 — Run the app**
-```
 streamlit run app.py
 ```
 
-**Step 4 — Open in browser**
-```
-http://localhost:8501
-```
+Open `http://localhost:8501` in your browser.
 
----
+## 7. How to Use
 
-## 📊 How to Use
+1. Open the live application.
+2. Enter a stock ticker, such as `AAPL`, `MSFT`, or `TCS.NS`.
+3. Select the historical data period.
+4. Run the prediction workflow.
+5. Explore the forecast chart, predicted values, and market statistics.
 
-# live link --> https://stockpredictorproject-agknu2yunsswuspbbinttf.streamlit.app/
-1. Open the app in your browser
-2. Type a stock symbol in the input box
-3. Select how much historical data to use (1y / 2y / 3y / 5y)
-4. Click the Predict button
-5. Wait a few seconds — results appear automatically
+## 8. Disclaimer
 
----
+This project is for educational purposes only and does not provide financial advice. Predictions are not guaranteed to be accurate and should not be used as the sole basis for investment decisions.
 
-## 🔤 Stock Symbol Examples
+## Author
 
-| Stock | Symbol |
-|---|---|
-| Apple | AAPL |
-| Tesla | TSLA |
-| Google | GOOGL |
-| Microsoft | MSFT |
-| Amazon | AMZN |
-| Reliance Industries | RELIANCE.NS |
-| TCS | TCS.NS |
-| Infosys | INFY.NS |
-| HDFC Bank | HDFCBANK.NS |
-| Wipro | WIPRO.NS |
-
-> For Indian stocks listed on NSE, always add .NS at the end of the symbol.
-
----
-
-## 🌐 Hosting 
-
-### Streamlit Community Cloud 
-1. Push code to GitHub
-2. Go to share.streamlit.io
-3. Connect your GitHub repo
-4. Click Deploy
-5. Get a live link like https://yourapp.streamlit.app
-
----
-
-## 🤖 How the Model Works
-
-1. Downloads historical stock price data from Yahoo Finance
-2. Scales the data using MinMaxScaler (0 to 1 range)
-3. Creates sequences of 30 days to train the LSTM model
-4. LSTM learns the pattern of price movements
-5. Predicts the next 30 days iteratively
-6. Scales predictions back to actual price values
-7. Shows result as UP or DOWN with a forecast chart
-
----
-
-## ⚠️ Disclaimer
-
-This app is built for educational purposes only.
-Stock predictions are not guaranteed to be accurate.
-Do not use this for real financial or investment decisions.
-
----
-
-## 👨‍💻 Author
-
-Anurag Tiwari
+**Anurag Tiwari**
