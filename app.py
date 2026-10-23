@@ -75,7 +75,7 @@ def main():
     # ─────────────────────────────────────────────
     # BRAND & SEARCH
     # ─────────────────────────────────────────────
-    st.markdown('<div class="brand-row"><span class="brand-mark">↗</span> StockCast <span style="font-weight:500;color:#7b8981;font-size:.78rem;letter-spacing:0">MARKET STUDIO</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="brand-row"><span class="brand-mark">↗</span> StockCast AI <span style="font-weight:500;color:#7b8981;font-size:.78rem;letter-spacing:0">MARKET STUDIO</span></div>', unsafe_allow_html=True)
     st.markdown("""
     <div class="hero">
       <div class="eyebrow">Your market, at a glance</div>
