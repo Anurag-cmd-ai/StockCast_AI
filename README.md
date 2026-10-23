@@ -2,7 +2,7 @@
 
 An interactive stock forecasting application built with Python, PyTorch, and Streamlit. It uses an LSTM neural network to generate 30-day stock price forecasts from historical data retrieved through Yahoo Finance.
 
-**Live Demo:** [Launch StockCast AI][(https://stockpredictorproject-cbp2mt2sv92wt7anm7kjqb.streamlit.app/)]
+**Live Demo:** https://stockpredictorproject-cbp2mt2sv92wt7anm7kjqb.streamlit.app
 
 ## 1. Project Objective
 
